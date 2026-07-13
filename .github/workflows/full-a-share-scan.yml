@@ -1,0 +1,115 @@
+name: Full A-Share Scan
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-universe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build full A-share universe
+        run: python src/build_universe.py
+        env:
+          OUT_DIR: output
+
+      - name: Upload universe
+        uses: actions/upload-artifact@v4
+        with:
+          name: a-share-universe
+          path: output/
+          retention-days: 7
+
+  scan:
+    needs: build-universe
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Download universe
+        uses: actions/download-artifact@v4
+        with:
+          name: a-share-universe
+          path: input
+
+      - name: Scan shard
+        run: python src/scan_shard.py --shard ${{ matrix.shard }} --shards 20 --universe input/universe.csv --out-dir output
+        env:
+          PER_STOCK_TIMEOUT: "25"
+
+      - name: Upload shard result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: a-share-shard-${{ matrix.shard }}
+          path: output/
+          retention-days: 7
+
+  merge:
+    needs: scan
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Download all shard results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: a-share-shard-*
+          path: downloaded
+          merge-multiple: false
+
+      - name: Merge all results
+        run: python src/merge_results.py
+        env:
+          INPUT_DIR: downloaded
+          OUT_DIR: final
+
+      - name: Upload final results
+        uses: actions/upload-artifact@v4
+        with:
+          name: a-share-final-results
+          path: final/
+          retention-days: 14
