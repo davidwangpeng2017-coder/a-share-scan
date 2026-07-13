@@ -1,0 +1,29 @@
+第1步：在 GitHub 创建公开仓库
+1. 打开 github.com 并登录。
+2. 点击右上角“+”。
+3. 选择 New repository。
+4. Repository name 填：a-share-scan
+5. 选择 Public。
+6. 不要勾选 Add a README。
+7. 点击 Create repository。
+
+第2步：上传本项目
+1. 解压本ZIP。
+2. 在空仓库页面点击 uploading an existing file。
+3. 上传解压后的所有文件和文件夹。
+4. 必须确认 .github/workflows/scan.yml 也上传成功。
+5. 点击 Commit changes。
+
+第3步：运行
+1. 打开仓库顶部 Actions。
+2. 点击左侧 Full A-Share Scan。
+3. 点击 Run workflow。
+4. 再点击绿色 Run workflow。
+5. 云端会先建立母集，再启动20个并行扫描任务。
+
+第4步：下载
+1. 等工作流状态变成绿色。
+2. 打开该次运行记录。
+3. 页面底部 Artifacts 找到 a-share-final-results。
+4. 下载并解压。
+5. 将 A股全市场逐股扫描结果.xlsx 上传给 ChatGPT。

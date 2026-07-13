@@ -1,0 +1,8 @@
+akshare>=1.18.60
+baostock>=0.8.9
+pandas>=2.2
+numpy>=1.26
+pyarrow>=16
+openpyxl>=3.1
+requests>=2.31
+tenacity>=8.2
